@@ -20,7 +20,7 @@ const state = {
 async function load() {
   const [rows, glb, picks, slots, asg, comp] = await Promise.all([
     fetch('/catalog.json', { cache: 'no-store' }).then(r => r.json()),
-    fetch('/glb-index.json', { cache: 'no-store' }).then(r => r.json()).catch(() => []),
+    fetch((window.PUBLIC_REGISTRY || {}).index || '/glb-index.json', { cache: 'no-store' }).then(r => r.json()).catch(() => []),
     fetch('/picks.json', { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
     fetch('/slots.json', { cache: 'no-store' }).then(r => r.json()).catch(() => []),
     fetch('/assignments.json', { cache: 'no-store' }).then(r => r.json()).catch(() => ({})),
@@ -39,7 +39,7 @@ async function load() {
   setInterval(refreshGlb, 30000);
 }
 async function refreshGlb() {
-  try { const glb = await fetch('/glb-index.json', { cache: 'no-store' }).then(r => r.json()); state.glb = new Set(glb); render(); updateCounts(); } catch (e) {}
+  try { const glb = await fetch((window.PUBLIC_REGISTRY || {}).index || '/glb-index.json', { cache: 'no-store' }).then(r => r.json()); state.glb = new Set(glb); render(); updateCounts(); } catch (e) {}
 }
 function sizeLabel(sz) { return { 32: 'XS', 64: 'S', 128: 'M', 256: 'L', 512: 'XL' }[sz] || (sz ? String(sz) : '?'); }
 function roleTags(r) { return r.role.split(',').filter(t => t && t !== 'ship' && t !== 'XS'); }
