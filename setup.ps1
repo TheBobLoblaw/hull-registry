@@ -19,9 +19,9 @@ foreach ($a in $want) {
     $zip = Join-Path $tmp $a.name
     if (-not (Test-Path $zip) -or (Get-Item $zip).Length -ne $a.size) {
         Write-Host "downloading $($a.name) ($([math]::Round($a.size / 1MB)) MB)..."
-        $ProgressPreference = "SilentlyContinue"
-        Invoke-WebRequest -Uri $a.browser_download_url -OutFile $zip -Headers @{ "User-Agent" = "hull-registry-setup" }
-        $ProgressPreference = "Continue"
+        $curl = Get-Command curl.exe -ErrorAction SilentlyContinue      # Windows 10+ ships curl.exe; it is many times faster than Invoke-WebRequest
+        if ($curl) { & $curl.Source -L --retry 5 --retry-delay 5 -C - -o $zip $a.browser_download_url; if ($LASTEXITCODE -ne 0) { throw "download failed: $($a.name)" } }
+        else { $ProgressPreference = "SilentlyContinue"; Invoke-WebRequest -Uri $a.browser_download_url -OutFile $zip -Headers @{ "User-Agent" = "hull-registry-setup" }; $ProgressPreference = "Continue" }
     }
     Write-Host "unpacking $($a.name)..."
     Expand-Archive -Path $zip -DestinationPath $PSScriptRoot -Force     # the zips contain models\... and blueprints\... already
