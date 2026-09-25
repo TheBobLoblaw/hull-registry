@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hull Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="registry.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Hull <span>Registry</span></h1>
+    <div class="sub">DU-Core-Exports · <span id="countAll">0</span> blueprints · myDU build</div>
+    <div class="spacer"></div>
+    <div class="stat">showing <b id="countShown">0</b> · models ready <b id="countGlb">0</b> · picked <b id="countPicked">0</b> · slots filled <b id="countSlots">0</b></div>
+    <button class="hbtn" id="btnSlots" type="button">slots</button>
+  </header>
+
+  <aside class="rail">
+    <div>
+      <h2>Search</h2>
+      <input class="search" id="q" type="search" placeholder="name, builder or component" autocomplete="off">
+    </div>
+    <div>
+      <h2>Import blueprint</h2>
+      <input class="search" id="bpUrl" type="url" placeholder="https://…/blueprint.json" autocomplete="off">
+      <div class="compbar"><input class="search" id="bpName" placeholder="name (optional)"><button id="bpImport" type="button">import</button></div>
+      <div class="stat" id="bpState"></div>
+    </div>
+    <div>
+      <h2>Components</h2>
+      <input class="search" id="compQ" list="compList" placeholder="e.g. Basic Container L" autocomplete="off">
+      <datalist id="compList"></datalist>
+      <div class="compbar"><span>at least</span><input class="search" id="compMin" type="number" value="1" min="1" step="1"><button id="compAdd" type="button">add</button></div>
+      <div class="chips" id="compChips"></div>
+    </div>
+    <div><h2>Category</h2><div class="chips" id="cat"></div></div>
+    <div><h2>Core size</h2><div class="chips" id="size"></div></div>
+    <div><h2>Role</h2><div class="chips" id="role"></div></div>
+    <div><h2>Builder</h2><select class="search" id="builder"><option value="">any builder</option></select></div>
+    <div><h2>Sort</h2><select class="search" id="sort">
+      <option value="name">name</option><option value="mass">mass, heaviest first</option><option value="elements">element count</option>
+      <option value="containers">cargo capacity (containers)</option><option value="weapons">weapons</option><option value="engines">engines</option>
+      <option value="component">component filter count</option>
+    </select></div>
+    <label class="toggle"><input type="checkbox" id="onlyGlb"> only with 3D model ready</label>
+    <label class="toggle"><input type="checkbox" id="onlyPicked"> only picked</label>
+    <div class="stat" style="margin-top:auto">keys: <kbd>j</kbd> <kbd>k</kbd> move · <kbd>space</kbd> pick · <kbd>r</kbd> reset view</div>
+  </aside>
+
+  <section class="list" id="list" tabindex="0" aria-label="Blueprint list"></section>
+
+  <section class="stage">
+    <div class="viewport" id="viewport">
+      <div class="hud"><div class="title" id="hudTitle">Select a hull</div><div class="by" id="hudBy">from the list</div></div>
+      <div class="tools">
+        <button id="btnReset" title="Reset camera">reset</button>
+        <button id="btnRotate" class="on" title="Auto-rotate">rotate</button>
+        <button id="btnWire" title="Wireframe">wire</button>
+        <button id="btnKit" title="Kit assembly: lay several blueprints out as one thing">kit</button>
+      </div>
+      <div class="notice" id="notice" hidden></div>
+    </div>
+    <div class="stripe"></div>
+    <div class="details">
+      <div>
+        <h3>Blueprint</h3>
+        <div class="kv" id="kv"></div>
+        <div class="tags" id="tags"></div>
+        <div class="asgbar"><button id="copyBp" type="button">copy blueprint link</button><span id="copyState"></span></div>
+        <div class="asgbar"><select id="giveTo"></select><button id="giveBtn" type="button">give in game</button><span id="giveState"></span></div>
+        <div class="asgbar"><button id="pubBtn" type="button">publish link</button><span id="pubState" style="word-break:break-all"></span></div>
+      </div>
+      <div>
+        <h3>Propulsion &amp; fit</h3>
+        <div class="bars" id="barsA"></div>
+      </div>
+      <div>
+        <h3>Components</h3>
+        <div class="comps" id="comps"></div>
+      </div>
+      <div>
+        <h3>Your pick</h3>
+        <input class="note" id="note" placeholder="intended use, e.g. Free Miners freighter, station shell, starter ship" disabled>
+        <div class="picksbar"><span>picks are saved to <code>viewer/picks.json</code></span><span id="saveState"></span></div>
+        <div class="picksbar"><b id="pickList" style="font-weight:400;color:var(--muted)"></b></div>
+        <div class="asgbar"><button id="pubPicked" type="button">publish all picked</button><span id="pubPickedState"></span></div>
+        <div class="picksbar"><span>public list for Settlers: <a id="pubIndex" href="http://138.197.88.4:8088/" target="_blank" rel="noopener">138.197.88.4:8088</a></span></div>
+      </div>
+      <div>
+        <h3>Assignment</h3>
+        <div class="asgbar"><span id="asgHeld">not assigned</span></div>
+        <div class="asgbar"><select id="asgSpawnSel"></select><button id="asgSpawn" disabled>spawn</button><span id="asgState"></span></div>
+        <div class="slotlist" id="asgSlots"></div>
+      </div>
+    </div>
+    <div class="kitpanel" id="kitPanel" hidden>
+      <div class="kitbar">
+        <h3>Kit</h3>
+        <select class="search" id="kitSets"></select>
+        <input class="search" id="kitId" placeholder="id, e.g. locura_pad" title="set id (file-safe)">
+        <input class="search" id="kitName" placeholder="name, e.g. Locura pad, 3 pieces">
+        <select class="search" id="kitKind"><option value="building">building</option><option value="station">station</option><option value="landmark">landmark</option><option value="pad">pad</option></select>
+        <label class="toggle"><input type="checkbox" id="kitSurface" checked> stands on a body</label>
+        <button class="hbtn" id="kitNew" type="button">new</button><button class="hbtn on" id="kitSave" type="button">save</button><button class="hbtn" id="kitDelete" type="button">delete</button>
+        <span class="spacer"></span><button class="hbtn" id="kitClose" type="button">close</button>
+      </div>
+      <div class="kitbar">
+        <button class="hbtn on" id="kitAdd" type="button">add selected hull</button>
+        <label>snap <select class="search" id="kitSnap"><option>1</option><option>8</option><option>16</option><option>32</option><option>64</option><option>128</option><option>256</option></select> m</label>
+        <label class="toggle"><input type="checkbox" id="kitBounds"> boxes only (big kits)</label>
+        <label class="toggle"><input type="checkbox" id="kitCentre" checked> turn about the box centre</label>
+        <span class="stat">keys: <kbd>←</kbd><kbd>→</kbd> x · <kbd>↑</kbd><kbd>↓</kbd> y · <kbd>PgUp</kbd><kbd>PgDn</kbd> z · <kbd>q</kbd><kbd>e</kbd> turn · <kbd>[</kbd><kbd>]</kbd> piece · <kbd>g</kbd> snap</span>
+        <span class="spacer"></span>
+        <select class="search" id="kitSlot"></select><button class="hbtn" id="kitAssign" type="button">assign</button>
+      </div>
+      <div class="kitpieces" id="kitPieces"></div>
+      <div class="kitbar"><input class="search" id="kitNote" placeholder="note"><span class="stat" id="kitState"></span></div>
+    </div>
+    <div class="slotsview" id="slotsView" hidden>
+      <div class="slotsbar"><h2>Slots</h2><label class="toggle"><input type="checkbox" id="slotsUnassigned"> only slots still wanting a hull</label><span class="stat" id="slotsStat"></span><span class="spacer"></span><button class="hbtn" id="btnSlotsClose" type="button">close</button></div>
+      <div class="slotsbody" id="slotsBody"></div>
+    </div>
+  </section>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script src="public.js"></script>
+<script type="module" src="registry.js"></script>
+</body>
+</html>
