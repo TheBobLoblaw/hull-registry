@@ -1,46 +1,64 @@
-# Hull Registry: instructions for Claude Code
+# Hull Registry: setup brief for Claude Code
 
-You are setting up or maintaining a local copy of the Hull Registry, a 3D viewer for a library of Dual Universe
-blueprints. Everything the viewer needs is either in this folder or in the GitHub release of this repository. Nothing
-has to be generated from scratch: the 3D models cannot be rebuilt here (they come from the game's own voxel tool on a
-myDU server), so always fetch them from the release.
+You are in a copy of the Hull Registry, a self-contained 3D viewer for 461 Dual Universe blueprints. Your job is to make this
+folder complete and working, without asking questions, and to keep it **portable**: everything lives in this one folder,
+nothing is installed, registered or written anywhere else on the machine. When it is done the folder can be copied to a USB
+stick or another Windows PC and `HullRegistry.exe` runs there as is.
 
-## First-time setup (do this when models/ or blueprints/ is missing)
+## What "complete" means
 
-1. Make sure you are in the folder that contains `HullRegistry.exe` and `index.html`.
-2. Fetch the latest release assets of `TheBobLoblaw/hull-registry`. With the GitHub CLI:
+    HullRegistry.exe           the local web server (9 MB, no dependencies; source is serve.py)
+    index.html registry.js registry.css kit.js public.js    the viewer
+    vendor/three/              three.js and its addons, bundled so no internet is needed to view
+    catalog.json components.json slots.json                 the catalogue
+    models/                    458 .glb files, same paths as the catalogue   <- from the GitHub release
+    blueprints/                462 .json blueprint files                     <- from the GitHub release
+    setup.ps1                  the script that fetches those two folders
 
-       gh release download --repo TheBobLoblaw/hull-registry --pattern "models*.zip" --pattern "blueprints.zip" --dir .
+`models` and `blueprints` are not in git (2.85 GB and 446 MB); they come from the release of `TheBobLoblaw/hull-registry`.
 
-   Without `gh`, download the same files from https://github.com/TheBobLoblaw/hull-registry/releases/latest with curl
-   or the browser. The models are split into `models-part1.zip` and `models-part2.zip` (about 1.4 GB each, GitHub's per-file
-   limit is 2 GB); get both. `blueprints.zip` is about 450 MB.
-3. Unzip every `models*.zip` and `blueprints.zip` here. Each zip already contains its top-level folder (`models/...`,
-   `blueprints/...`), so after unzipping this folder holds `models\Ships\...`, `models\Elevators\...`, `models\Other\...`
-   and `blueprints\...`. Delete the zips afterwards.
-4. Check: `models` should hold about 458 `.glb` files and `blueprints` about 462 `.json` files. Compare with
-   `catalog.json`: every row's `f` is a blueprint path; the model for it is the same path with `.glb` under `models`.
-5. Start `HullRegistry.exe` (or `python serve.py`). It serves this folder on http://localhost:8765/ and opens the
-   browser. `http://localhost:8765/glb-index.json` lists the models it found; if it is empty the `models` folder is in
-   the wrong place.
+## Do this
+
+1. From this folder run the setup script. It reads the latest release from the GitHub API, downloads `models-part1.zip`,
+   `models-part2.zip` and `blueprints.zip` (about 3.3 GB in all, so it takes a while on a slow line), unpacks them here,
+   deletes the zips, prints the counts and starts the viewer:
+
+       powershell -ExecutionPolicy Bypass -File setup.ps1 -NoStart
+
+   It is idempotent; if it was interrupted, run it again. It needs only PowerShell 5 or newer, which every Windows has.
+2. If the script cannot run (no PowerShell, a corporate proxy, the API rate-limited), do the same by hand: download the
+   three zips from https://github.com/TheBobLoblaw/hull-registry/releases/latest (with `gh release download --repo
+   TheBobLoblaw/hull-registry --pattern "*.zip"`, `curl -L`, or a browser) and unzip each one into this folder. Every zip
+   already contains its top-level folder, so unzipping here yields `models\Ships\...`, `models\Elevators\...`,
+   `models\Other\...`, `models\Voxel\...` and `blueprints\...`. Never unzip into a subfolder of your own.
+3. Verify, and fix anything that fails:
+   - `models` holds 456 or more `.glb` files and `blueprints` holds 462 `.json` files.
+   - `catalog.json` parses and has 461 rows; each row's `f` is a path like `Ships/M Cores/Name.json`; its model is the same
+     path with `.glb` under `models`, its blueprint the same path under `blueprints`.
+   - Start `HullRegistry.exe`. It prints the URL, opens the browser at http://localhost:8765/, and
+     http://localhost:8765/glb-index.json returns a JSON list with the same count as the `.glb` files. Load
+     http://localhost:8765/?sel=Ships%2FXS%20Cores%2FArmitage%20-%20APS%20Delta%20Mk1.json and confirm the model renders.
+   - Windows SmartScreen may block the unsigned exe the first time: "More info", "Run anyway". If the exe is refused
+     entirely, `python serve.py` does the same job when Python 3 is present.
+4. Leave the folder tidy: no `_download` folder, no zips, no build output.
+
+## Portability rules
+
+- Everything is relative to the folder the exe sits in; do not move files out of it or point anything at absolute paths.
+- Do not install Python, Node or anything else for the viewer; it does not need them. Do not add a scheduled task,
+  service, firewall rule or shortcut outside the folder.
+- To move it: copy the whole folder. To hand it to someone: zip the whole folder (about 3.4 GB with models).
+- The browser remembers picks and panel positions in its own storage; that is fine and per machine.
+- Port 8765 is the only thing it uses. If it is taken, edit `PORT` at the top of `serve.py` and run that instead.
 
 ## Updating later
 
-- Viewer and catalogue: pull this repository (`git pull`) or download the ZIP again and overwrite the files, keeping
-  `models` and `blueprints`.
-- Models and blueprints: download the newest release assets and unzip over the existing folders. A release note says
-  which hulls were added.
+- Viewer and catalogue: `git pull` here (or download the repo ZIP again and overwrite, keeping `models` and `blueprints`).
+- Models and blueprints: run `setup.ps1` again; it skips assets already unpacked for that release and fetches new ones.
 
-## What not to do
+## Do not
 
-- Do not try to convert blueprint `.json` files into `.glb` models: the voxel mesh needs Novaquark's `dual-voxel` tool
-  inside a myDU server container, plus the game's element meshes. It is not possible from this folder.
-- Do not run the exe from inside a zip or from a folder without the viewer files: it serves whatever folder it sits in.
-- Port 8765 must be free. If another program uses it, run `python serve.py` after editing `PORT` at the top.
-
-## If something is wrong
-
-- Viewer opens but the list is empty: `catalog.json` is missing or the page was opened as a file instead of through the
-  server. Always use http://localhost:8765/.
-- A hull shows "no 3D model for this hull yet": that `.glb` is not in `models`. Check the path against `catalog.json`.
-- Models load but look untextured: the browser could not reach the CDN for three.js's decoder; internet is needed once.
+- Do not try to rebuild models from blueprint JSON. The voxel mesh needs Novaquark's `dual-voxel` tool inside a myDU
+  server container plus the game's element meshes; it is impossible from this folder. Always take models from the release.
+- Do not open `index.html` as a file; the viewer must be served (the exe or `serve.py`) or the catalogue will not load.
+- Do not commit `models`, `blueprints` or zips to git; `.gitignore` already excludes them.

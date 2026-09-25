@@ -1,41 +1,40 @@
 # Hull Registry
 
-A 3D viewer for the Old Dominion blueprint library: 461 community-built Dual Universe ships and buildings, each with a
-model you can orbit, its stats, its full component list, and the blueprint file itself.
+A self-contained 3D viewer for the Old Dominion blueprint library: 461 community-built Dual Universe ships and buildings,
+each with a model you can orbit, its stats, its full component list, and the blueprint file itself. Windows, portable,
+nothing to install.
 
-Nothing to install and no account needed. Windows.
+## Setup
 
-## Set it up (10 minutes, mostly download time)
+Two ways:
 
-1. Download this repository: green **Code** button, **Download ZIP**, unzip it somewhere (for example `C:\HullRegistry`).
-2. Open the **Releases** page (right-hand side of the GitHub page) and download from the latest release:
-   - `models-part1.zip` and `models-part2.zip` (about 1.4 GB each), unzip both **into the same folder**, so you get one `models` folder next to `HullRegistry.exe`.
-   - `blueprints.zip` (about 450 MB), same thing: a `blueprints` folder next to the exe.
-3. Double-click **HullRegistry.exe**. A black window stays open (that is the little web server; close it to quit) and the
-   viewer opens in your browser at http://localhost:8765/.
+- **With Claude Code in VS Code:** open this folder and say "set up the Hull Registry". `CLAUDE.md` tells it exactly what
+  to do and how to check it.
+- **By hand:** right-click `setup.ps1`, "Run with PowerShell". It downloads the models and blueprints from the release
+  (about 3.3 GB) into this folder and starts the viewer. Then, any time: double-click `HullRegistry.exe`.
 
-Windows SmartScreen may warn about the exe because it is unsigned: "More info", then "Run anyway". It is a 9 MB Python
-web server and nothing else; `serve.py` in this folder is its source.
+Windows SmartScreen may warn about the unsigned exe the first time: "More info", then "Run anyway". It is a small web
+server that serves this folder on http://localhost:8765/ and nothing else; `serve.py` is its source.
 
-If you have Claude Code, `CLAUDE.md` in this folder tells it how to do all of the above for you.
+## Portable
+
+The folder is the whole program. Copy it to a USB stick or another PC, run the exe there. No internet is needed once the
+models are in place; three.js is bundled under `vendor/`.
 
 ## Using it
 
-- Click a hull in the list. Drag to orbit, wheel to zoom, `r` resets the camera, `rotate` toggles the turntable, `wire` shows the mesh.
+- Click a hull. Drag to orbit, wheel to zoom, `r` resets the camera, `rotate` toggles the turntable, `wire` shows the mesh.
 - Search by name, builder or component ("Basic Container L", "Atmospheric Engine M"). Filter by category, core size, role
-  and builder; sort by mass, element count, cargo, weapons or engines. "only with 3D model ready" hides hulls whose model is not in your `models` folder.
-- The details pane shows the fit (engines, wings, containers, weapons, industry), the component list, and "copy blueprint
-  link", which is the file in your `blueprints` folder.
+  and builder; sort by mass, element count, cargo, weapons or engines.
+- The details pane shows the fit, the component list and "copy blueprint link" for the file in `blueprints`.
 - `j` and `k` move through the list.
 
-## Folder layout
+## Contents
 
-    HullRegistry.exe      the local web server (built from serve.py, see BUILD.md)
-    index.html, registry.js, registry.css, kit.js    the viewer (three.js from a CDN, so it needs internet the first time)
-    catalog.json, components.json, slots.json         the catalogue
-    public.js             tells the viewer that models and blueprints are local folders
-    models/               from models.zip: one .glb per hull, same paths as the catalogue
-    blueprints/           from blueprints.zip: the blueprint .json files
+    HullRegistry.exe  setup.ps1  serve.py  BUILD.md
+    index.html  registry.js  registry.css  kit.js  public.js  vendor/three/
+    catalog.json  components.json  slots.json
+    models/       from the release, 458 .glb (packed: WebP textures at 512 px, meshopt meshes; 2.85 GB)
+    blueprints/   from the release, 462 .json (446 MB)
 
-Models are packed (WebP textures at 512 px, compressed meshes) from Blender exports of the blueprints, 2.8 GB in all; the
-originals are 32 GB and live on the maintainer's PC. This copy is refreshed from the main server project whenever the library changes.
+Refreshed from the main server project whenever the library changes; a new release carries new models.
