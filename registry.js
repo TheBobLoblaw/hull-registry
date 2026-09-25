@@ -366,6 +366,8 @@ const fill = new THREE.DirectionalLight(0x9fc5ff, 0.8); fill.position.set(-1, 0.
 const grid = new THREE.GridHelper(200, 40, 0x2e3b46, 0x1f2830); grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
 let model = null, wire = false;
 const loader = new GLTFLoader();
+// packed models (tools/hull-registry/pack_models.sh: WebP textures, meshopt-compressed meshes) need the meshopt decoder; plain ones ignore it
+import('three/addons/libs/meshopt_decoder.module.js').then(m => loader.setMeshoptDecoder(m.MeshoptDecoder)).catch(() => {});
 function resize() { const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 new ResizeObserver(resize).observe(vp); resize();
 function frame() { requestAnimationFrame(frame); controls.update(); renderer.render(scene, camera); }
@@ -414,7 +416,7 @@ async function select(r) {
     $('#hudBy').textContent += ` · ${meshes} meshes · ${s.x.toFixed(0)}×${s.y.toFixed(0)}×${s.z.toFixed(0)} m`;
   }, (xhr) => {
     if (token === loadToken && xhr.total) { notice.textContent = `loading model… ${Math.round(xhr.loaded / xhr.total * 100)}% of ${(xhr.total / 1048576).toFixed(0)} MB`; }
-  }, (err) => { if (token === loadToken) { notice.hidden = false; notice.textContent = PUBLIC ? 'this model is not on the public server yet (the 32 GB upload runs in the background) — try again later, or copy the blueprint link and import it' : 'could not load model: ' + (err.message || err); } });
+  }, (err) => { if (token === loadToken) { notice.hidden = false; notice.textContent = PUBLIC ? 'could not load this model (' + (err.message || err) + ') — is the models folder complete? See README.md' : 'could not load model: ' + (err.message || err); } });
 }
 $('#btnReset').onclick = () => { if (model) fit(model); };
 $('#btnRotate').onclick = () => { controls.autoRotate = !controls.autoRotate; $('#btnRotate').classList.toggle('on', controls.autoRotate); };
