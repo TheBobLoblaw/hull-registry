@@ -1,28 +1,41 @@
 # Hull Registry
 
-A 3D viewer for the Old Dominion blueprint library: 461 community-built Dual Universe ships and buildings, with a model
-preview, stats, component lists and a copy-able blueprint link for each one.
+A 3D viewer for the Old Dominion blueprint library: 461 community-built Dual Universe ships and buildings, each with a
+model you can orbit, its stats, its full component list, and the blueprint file itself.
 
-## Easiest: open it in a browser
+Nothing to install and no account needed. Windows.
 
-http://138.197.88.4:8088/ — nothing to install. Click a hull in the list to see it in 3D, search by name, builder or
-component, filter by size and role. "copy blueprint link" gives a URL you can paste into a myDU server's blueprint import.
+## Set it up (10 minutes, mostly download time)
 
-## Run it on your own PC
+1. Download this repository: green **Code** button, **Download ZIP**, unzip it somewhere (for example `C:\HullRegistry`).
+2. Open the **Releases** page (right-hand side of the GitHub page) and download from the latest release:
+   - `models-part1.zip` and `models-part2.zip` (about 1.4 GB each), unzip both **into the same folder**, so you get one `models` folder next to `HullRegistry.exe`.
+   - `blueprints.zip` (about 450 MB), same thing: a `blueprints` folder next to the exe.
+3. Double-click **HullRegistry.exe**. A black window stays open (that is the little web server; close it to quit) and the
+   viewer opens in your browser at http://localhost:8765/.
 
-You need Python 3 (https://www.python.org, tick "Add to PATH" when installing).
+Windows SmartScreen may warn about the exe because it is unsigned: "More info", then "Run anyway". It is a 9 MB Python
+web server and nothing else; `serve.py` in this folder is its source.
 
-1. Download this repository: green **Code** button, **Download ZIP**, unzip it anywhere. Or `git clone https://github.com/TheBobLoblaw/hull-registry`.
-2. Double-click **Start Hull Registry.bat**. A window opens the viewer at http://localhost:8765/.
-3. The 3D models and blueprint files stream from the VPS as you click hulls (they are 32 GB, so they are not in the download).
+If you have Claude Code, `CLAUDE.md` in this folder tells it how to do all of the above for you.
 
-Keys in the viewer: `j` `k` move through the list, `space` picks, `r` resets the camera; drag to orbit, wheel to zoom.
+## Using it
 
-## What is in here
+- Click a hull in the list. Drag to orbit, wheel to zoom, `r` resets the camera, `rotate` toggles the turntable, `wire` shows the mesh.
+- Search by name, builder or component ("Basic Container L", "Atmospheric Engine M"). Filter by category, core size, role
+  and builder; sort by mass, element count, cargo, weapons or engines. "only with 3D model ready" hides hulls whose model is not in your `models` folder.
+- The details pane shows the fit (engines, wings, containers, weapons, industry), the component list, and "copy blueprint
+  link", which is the file in your `blueprints` folder.
+- `j` and `k` move through the list.
 
-- `index.html`, `registry.js`, `registry.css`, `kit.js`: the viewer (three.js from a CDN).
-- `catalog.json`, `components.json`, `slots.json`: the catalogue, one row per hull, with its element list.
-- `public.js`: where the models and blueprints come from.
-- `serve.py` and the .bat: a tiny local web server, because browsers will not load the catalogue from a plain file.
+## Folder layout
 
-Updated from the main server project (`du-server/tools/hull-registry/export_standalone.sh`) whenever the library changes.
+    HullRegistry.exe      the local web server (built from serve.py, see BUILD.md)
+    index.html, registry.js, registry.css, kit.js    the viewer (three.js from a CDN, so it needs internet the first time)
+    catalog.json, components.json, slots.json         the catalogue
+    public.js             tells the viewer that models and blueprints are local folders
+    models/               from models.zip: one .glb per hull, same paths as the catalogue
+    blueprints/           from blueprints.zip: the blueprint .json files
+
+Models are packed (WebP textures at 512 px, compressed meshes) from Blender exports of the blueprints, 2.8 GB in all; the
+originals are 32 GB and live on the maintainer's PC. This copy is refreshed from the main server project whenever the library changes.
